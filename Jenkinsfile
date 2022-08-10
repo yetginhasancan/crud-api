@@ -1,21 +1,20 @@
-pipeline {
-    agent any
-
-    stages {
-        stage('Build') {
+ pipeline {
+        agent none
+        stages {
+          stage("build & SonarQube analysis") {
+            agent any
             steps {
-                echo 'Building in main branch..'
+              withSonarQubeEnv('My SonarQube Server') {
+                sh 'mvn clean package sonar:sonar'
+              }
             }
-        }
-        stage('Test') {
+          }
+          stage("Quality Gate") {
             steps {
-                echo 'Testing in main branch..'
+              timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+              }
             }
+          }
         }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying in main branch....'
-            }
-        }
-    }
-}
+      }
